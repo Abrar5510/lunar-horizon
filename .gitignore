@@ -1,0 +1,22 @@
+# Large or re-downloadable data (see docs/03 and tools/fetch_and_prep.sh)
+/dem/*
+!/dem/urls.txt
+/dem_ready/
+/sites/
+/kernels/
+/plugins/
+/installers/
+/cspice/
+/ue_cache/
+/.venv/
+# Unreal caches (symlinked into ue_cache)
+/LunarHorizon/Binaries
+/LunarHorizon/DerivedDataCache
+/LunarHorizon/Intermediate
+/LunarHorizon/Saved
+.DS_Store
+__pycache__/
+# Machine-local: Cesium plugin symlink, Zen cache path, pj project tracker
+/LunarHorizon/Plugins/CesiumForUnreal
+/LunarHorizon/Config/Mac/MacEngine.ini
+/STATE.md
