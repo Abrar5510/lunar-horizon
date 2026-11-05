@@ -9,7 +9,7 @@
 /cspice/
 /ue_cache/
 /.venv/
-# Unreal caches (symlinked into ue_cache)
+# Unreal caches (real dirs: dylib rpaths and UBA break through symlinks)
 /LunarHorizon/Binaries
 /LunarHorizon/DerivedDataCache
 /LunarHorizon/Intermediate
@@ -20,3 +20,11 @@ __pycache__/
 /LunarHorizon/Plugins/CesiumForUnreal
 /LunarHorizon/Config/Mac/MacEngine.ini
 /STATE.md
+# MarsMap: Unreal caches, machine-local Zen path, MOLA grids (tools/mars_prep.py downloads them)
+/MarsMap/Binaries
+/MarsMap/DerivedDataCache
+/MarsMap/Intermediate
+/MarsMap/Saved
+/MarsMap/Config/Mac/MacEngine.ini
+/MarsMap/Content/Data/*.img
+/LunarHorizon/cesium-request-cache.sqlite
