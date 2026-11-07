@@ -184,20 +184,51 @@ inline FRoute PlanRoute(const FGrid& G, double Lat0, double Lon0, double Lat1, d
     std::vector<int> Cells;
     for (int C = Goal; C != -1; C = Parent[C]) Cells.push_back(C);
     std::reverse(Cells.begin(), Cells.end());
-    for (size_t I = 0; I < Cells.size(); ++I)
-    {
-        const int C = Cells[I];
-        FRoutePt Pt{LatOf(C / W), LonOf(C % W), double(G.M[C]), 0};
-        if (I)
+    // String-pull: an 8-neighbour grid path zigzags ("east, then diagonal"). Replace runs of cells with
+    // straight great-circle legs, sampled every half cell, when every step keeps the slope limit and the leg
+    // costs no more than the grid path it replaces (so it doesn't cut across terrain the search avoided).
+    const double StepM = 0.5 * Down[H / 2];
+    auto Leg = [&](int Ca, int Cb, bool bEmit) {
+        double LegCost = 0;
+        double A[3], B[3];
+        Unit(LatOf(Ca / W), LonOf(Ca % W), A);
+        Unit(LatOf(Cb / W), LonOf(Cb % W), B);
+        const int N = std::max(1, int(GreatCircleM(LatOf(Ca / W), LonOf(Ca % W), LatOf(Cb / W), LonOf(Cb % W)) / StepM));
+        for (int K = 1; K <= N; ++K)
         {
+            const double T = double(K) / N, X = A[0] + (B[0] - A[0]) * T, Y = A[1] + (B[1] - A[1]) * T, Z = A[2] + (B[2] - A[2]) * T;
+            const double Lat = std::asin(Z / std::sqrt(X * X + Y * Y + Z * Z)) * R2D, Lon = Wrap(std::atan2(-Y, X) * R2D, 360.0);
             const FRoutePt& Prev = R.Pts.back();
-            const double D = GreatCircleM(Prev.Lat, Prev.LonE, Pt.Lat, Pt.LonE);
-            const double Dh = Pt.ElevM - Prev.ElevM;
+            FRoutePt Pt{Lat, Lon, G.Sample(Lat, Lon), 0};
+            const double D = GreatCircleM(Prev.Lat, Prev.LonE, Lat, Lon), Dh = Pt.ElevM - Prev.ElevM;
+            if (!bEmit)
+            {
+                const double S = std::abs(Dh) / std::max(D, 1.0) / TanMax;
+                LegCost += D * (1.0 + 2.0 * S * S);
+                if (S > 1.0 || LegCost > Cost[Cb] - Cost[Ca] + 1.0) return false;
+                R.Pts.push_back(Pt);
+                continue;
+            }
             Pt.DistM = Prev.DistM + D;
             (Dh > 0 ? R.AscentM : R.DescentM) += std::abs(Dh);
             R.MaxSlopeDeg = std::max(R.MaxSlopeDeg, std::atan2(std::abs(Dh), D) * R2D);
+            R.Pts.push_back(Pt);
         }
-        R.Pts.push_back(Pt);
+        return true;
+    };
+    auto Try = [&](int Ca, int Cb) {   // test a leg without keeping it
+        const size_t Keep = R.Pts.size();
+        const bool Ok = Leg(Ca, Cb, false);
+        R.Pts.resize(Keep);
+        return Ok;
+    };
+    R.Pts.push_back({LatOf(Start / W), LonOf(Start % W), G.Sample(LatOf(Start / W), LonOf(Start % W)), 0});
+    for (size_t I = 0; I + 1 < Cells.size();)
+    {
+        size_t J = I + 1;
+        while (J + 1 < Cells.size() && Try(Cells[I], Cells[J + 1])) ++J;
+        Leg(Cells[I], Cells[J], true);
+        I = J;
     }
     R.DistM = R.Pts.back().DistM;
     return R;

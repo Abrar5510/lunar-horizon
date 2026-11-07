@@ -155,7 +155,7 @@ void AMarsGlobe::Rebuild()
 		for (int I = 0; I < NLon; ++I)
 		{
 			const int A = J * W + I, B = A + 1, C = A + W, D = C + 1;
-			T.Append({A, B, C, B, D, C});
+			T.Append({A, C, B, B, C, D});   // front faces outward (two-sided shading flips normals on back faces)
 		}
 	Mesh->CreateMeshSection(0, V, T, N, UV, TArray<FColor>(), TArray<FProcMeshTangent>(), false);
 	Mesh->SetMaterial(0, Mat);
@@ -477,12 +477,16 @@ void AMarsHUD::DrawHUD()
 		return true;
 	};
 
+	TArray<FVector2D, TInlineAllocator<32>> Labels;
 	for (const FMarsSite& S : MarsSites())
 	{
 		FVector2D P;
 		if (!ToScreen(G->Surface(S.Lat, S.LonE), P)) continue;
 		const FLinearColor C = KindColor(S.Kind);
 		DrawRect(C, P.X - 3 * Ts, P.Y - 3 * Ts, 6 * Ts, 6 * Ts);
+		// Sites are listed landers first, so a lander keeps its label when it sits on top of its crater.
+		if (Labels.ContainsByPredicate([&](const FVector2D& L) { return FMath::Abs(L.Y - P.Y) < 14 * Ts && FMath::Abs(L.X - P.X) < 110 * Ts; })) continue;
+		Labels.Add(P);
 		DrawText(S.Name, C, P.X + 6 * Ts, P.Y - 7 * Ts, Font, Ts);
 	}
 

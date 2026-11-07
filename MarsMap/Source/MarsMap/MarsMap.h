@@ -41,7 +41,7 @@ public:
 	bool Pick(const FVector& Origin, const FVector& Dir, double& Lat, double& LonE) const;
 
 	TSharedPtr<MarsCore::FGrid> Hi, Lo;   // 16 px/deg (mesh, readouts), 4 px/deg (routing)
-	float Exaggeration = 20.f;
+	float Exaggeration = 10.f;
 	bool bNatural = false;
 
 private:
