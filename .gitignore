@@ -28,3 +28,5 @@ __pycache__/
 /MarsMap/Config/Mac/MacEngine.ini
 /MarsMap/Content/Data/*.img
 /LunarHorizon/cesium-request-cache.sqlite
+# Packaged game builds
+/builds/
