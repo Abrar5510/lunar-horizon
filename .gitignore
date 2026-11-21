@@ -30,3 +30,5 @@ __pycache__/
 /LunarHorizon/cesium-request-cache.sqlite
 # Packaged game builds
 /builds/
+# Pixel Streaming runtime logs/pid
+/.scratch/
